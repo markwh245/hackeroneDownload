@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [ ! -d "disclosure" ]; then
+	mkdir /root/Desktop/disclosure
+fi
+today=$(date | awk '{print $1,$2,$3}' | sed 's/ /_/g')
+
+if [ ! -d "/root/Desktop/disclosure/$today" ]; then 
+	mkdir /root/Desktop/disclosure/$today
+fi
+
+downloadTweets() {
+wget -O /root/Desktop/disclosure/$today/disclosure.html https://twitter.com/disclosedh1 
+}
+
+
+editTweets(){
+
+cat /root/Desktop/disclosure/$today/disclosure.html | grep -Eo "(http|https)://[a-zA-Z0-9./?=_-]*" | sort -u | grep hackerone.com/reports > /root/Desktop/disclosure/$today/hackeroneReports.txt
+}
+
+downloadDisclosure(){
+
+wget -O /root/Desktop/disclosure/$today/text.txt -i /root/Desktop/disclosure/$today/hackeroneReports.txt
+cat /root/Desktop/disclosure/$today/text.txt | egrep -wi --color '<meta property=\"og:title\" content=|<meta property=\"og:url|<meta name=\"og:description\" content=' > /root/Desktop/disclosure/$today/text2.txt
+cat /root/Desktop/disclosure/$today/text2.txt | grep "content=" |cut -d"=" -f3 >> /root/Desktop/disclosure/$today/tidyDisclosure.txt
+cat /root/Desktop/disclosure/$today/tidyDisclosure.txt | awk 'ORS="\n\n\n"' > /root/Desktop/disclosure/$today/disclosureFinalReport.txt
+cp /root/Desktop/disclosure/$today/disclosureFinalReport.txt /root/Desktop/disclosure/$today+disclosureFinalReport.txt
+}
+
+downloadTweets
+editTweets
+downloadDisclosure
